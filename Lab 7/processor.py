@@ -1,21 +1,58 @@
+
+import math
+
+
 def sanitize_license_plate(plate):
+    if not isinstance(plate, str):
+        return ""
+
     plate = plate.strip()
     for ch in ['-', ' ', '_', '#']:
         plate = plate.replace(ch, '')
     return plate.upper()
 
+
 def parse_trip_mileage(mileage_csv):
-    parts = mileage_csv.split(',')
-    return [float(m) for m in parts]
+    if not isinstance(mileage_csv, str) or not mileage_csv.strip():
+        return []
+
+    try:
+        parts = mileage_csv.split(',')
+        mileages = [float(m.strip()) for m in parts]
+
+        if any(not math.isfinite(m) or m < 0 for m in mileages):
+            return []
+
+        return mileages
+    except (ValueError, TypeError):
+        return []
+
 
 def format_rental_invoice(record):
+    if not isinstance(record, str):
+        return "Invalid rental record"
+
     parts = record.split(':')
+
+    if len(parts) != 3:
+        return "Invalid rental record"
+
     driver = parts[0].strip()
-    days = int(parts[1])
     category = parts[2].strip()
+
+    try:
+        days = int(parts[1].strip())
+    except (ValueError, TypeError):
+        return "Invalid rental record"
+
+    if not driver or not category or days <= 0:
+        return "Invalid rental record"
+
     daily_rate = 50.0 if category.lower() == "suv" else 30.0
     total = days * daily_rate
+
     return f"Driver {driver} booked {category} for {days} days: Total ${total:.2f}"
+
 
 def main():
     print("==== Running sanitize_license_plate ====")
@@ -32,6 +69,7 @@ def main():
     record_input = input("Enter rental record (Driver:Days:Category): ")
     invoice = format_rental_invoice(record_input)
     print("Rental Invoice:", invoice)
+
 
 if __name__ == "__main__":
     main()
